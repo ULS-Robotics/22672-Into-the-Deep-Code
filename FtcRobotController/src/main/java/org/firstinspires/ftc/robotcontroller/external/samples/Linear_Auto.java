@@ -9,13 +9,14 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.BuiltinCameraDirection;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.List;
 
-@TeleOp(name="OpModeCode2024", group="Linear OpMode")
+@TeleOp(name="Autonomous1", group="Concept")
 
 public class Linear_Auto extends LinearOpMode {
     private DcMotor leftFront;
@@ -58,7 +59,7 @@ public class Linear_Auto extends LinearOpMode {
         waitForStart();
         initAprilTag();
         while (opModeIsActive()) {
-
+            /*
             double axial = -gamepad1.left_stick_y;
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
@@ -68,18 +69,6 @@ public class Linear_Auto extends LinearOpMode {
             double leftBack_pwr = axial + lateral + yaw;
             double rightBack_pwr = axial - lateral - yaw;
 
-            if ((gamepad1.a) && (canSwitch)) {
-                canSwitch = false;
-                reverse_multiplier *= -1;
-            } else if (!gamepad1.a) {
-                canSwitch = true;
-            }
-
-            /* things on the to do list
-            if (gamepad1.right_bumper){
-                clawWrist.setPosition(0.5);
-                clawWrist.setPower(-0.5);
-            }*/
 
             leftFront.setPower(reverse_multiplier * leftFront_pwr);
             rightFront.setPower(reverse_multiplier * rightFront_pwr);
@@ -87,7 +76,9 @@ public class Linear_Auto extends LinearOpMode {
             rightBack.setPower(reverse_multiplier * rightBack_pwr);
             AprilTagDetections();
             telemetry.update();
+            */
 
+            AprilTagDetections();
         }
     }
     public void initAprilTag(){
@@ -108,14 +99,29 @@ public class Linear_Auto extends LinearOpMode {
     @SuppressLint("DefaultLocale")
     public void AprilTagDetections(){
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
+        // Step through the list of detections and display info for each one.
         for (AprilTagDetection detection : currentDetections) {
             if (detection.metadata != null) {
                 telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
+                telemetry.addLine(String.format("XYZ %6.1f %6.1f %6.1f  (inch)",
+                        detection.robotPose.getPosition().x,
+                        detection.robotPose.getPosition().y,
+                        detection.robotPose.getPosition().z));
+                telemetry.addLine(String.format("PRY %6.1f %6.1f %6.1f  (deg)",
+                        detection.robotPose.getOrientation().getPitch(AngleUnit.DEGREES),
+                        detection.robotPose.getOrientation().getRoll(AngleUnit.DEGREES),
+                        detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES)));
             } else {
                 telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                //telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+                telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
             }
-        }
+        }   // end for() loop
+
+        telemetry.addLine("\nkey:\nXYZ = X (Right), Y (Forward), Z (Up) dist.");
+        telemetry.addLine("PRY = Pitch, Roll & Yaw (XYZ Rotation)");
+
     }
 
 }

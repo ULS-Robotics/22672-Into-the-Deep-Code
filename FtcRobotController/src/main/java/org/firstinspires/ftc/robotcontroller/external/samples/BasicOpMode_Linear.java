@@ -32,8 +32,13 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private DcMotor rightFront;
     private DcMotor rightBack;
 
-    //private DcMotor leftArm;
-    //private DcMotor rightArm;
+    private DcMotor rightShoulder;      //all arms
+
+    //private DcMotor rightElbow;
+
+    private DcMotor leftShoulder;
+
+    //private DcMotor leftElbow;
 
     private Servo clawEat;
 
@@ -52,10 +57,12 @@ public class BasicOpMode_Linear extends LinearOpMode {
         leftBack = hardwareMap.get(DcMotor.class, "left_back");
         rightBack = hardwareMap.get(DcMotor.class, "right_back");
         rightFront = hardwareMap.get(DcMotor.class, "right_front");
-        //leftArm = hardwareMap.get(DcMotor.class, "left_arm");
-        //rightArm = hardwareMap.get(DcMotor.class, "right_arm");
         clawEat = hardwareMap.get(Servo.class, "claw_eat");
         clawWrist = hardwareMap.get(Servo.class, "servo_wrist");
+        rightShoulder = hardwareMap.get(DcMotor.class, "right_shoulder");
+        //rightElbow = hardwareMap.get(DcMotor.class, "right_elbow");
+        leftShoulder = hardwareMap.get(DcMotor.class, "left_shoulder");
+        //leftElbow = hardwareMap.get(DcMotor.class, "left_elbow")
 
         // set directions
         leftFront.setDirection(DcMotor.Direction.REVERSE);
@@ -89,6 +96,14 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 clawWrist.setPosition(0.5);
                 clawWrist.setPower(-0.5);
             }*/
+
+            if (gamepad2.left_trigger > 0){
+                leftShoulder.setPower(gamepad2.left_trigger);
+                rightShoulder.setPower(gamepad2.left_trigger);
+            } else if (gamepad2.right_trigger > 0){
+                leftShoulder.setPower(- gamepad2.left_trigger);
+                rightShoulder.setPower(- gamepad2.left_trigger);
+            }
 
             leftFront.setPower(reverse_multiplier * leftFront_pwr);
             rightFront.setPower(reverse_multiplier * rightFront_pwr);

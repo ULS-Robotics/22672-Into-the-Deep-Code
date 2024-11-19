@@ -1,0 +1,7 @@
+# This is the communication document and to-do list for programming
+
+_This is a MarkDown file: it is really cool and you can format it easily. Check out a quick 
+tutorial here: https://www.markdownguide.org/cheat-sheet/_
+
+- Part of the arm is done, code is currently committed to git but do not run it, parts are badly written.
+- 
