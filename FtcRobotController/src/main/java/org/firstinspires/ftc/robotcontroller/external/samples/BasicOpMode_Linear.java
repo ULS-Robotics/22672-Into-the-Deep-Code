@@ -34,13 +34,13 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
     private DcMotor rightShoulder;      //all arms
 
-    //private DcMotor rightElbow;
+    private DcMotor rightElbow;
 
     private DcMotor leftShoulder;
 
-    //private DcMotor leftElbow;
+    private DcMotor leftElbow;
 
-    private Servo clawEat;
+    private CRServo clawEat;
 
     private Servo clawWrist;
     private AprilTagProcessor aprilTag;
@@ -57,12 +57,12 @@ public class BasicOpMode_Linear extends LinearOpMode {
         leftBack = hardwareMap.get(DcMotor.class, "left_back");
         rightBack = hardwareMap.get(DcMotor.class, "right_back");
         rightFront = hardwareMap.get(DcMotor.class, "right_front");
-        clawEat = hardwareMap.get(Servo.class, "claw_eat");
-        clawWrist = hardwareMap.get(Servo.class, "servo_wrist");
+        clawEat = hardwareMap.get(CRServo.class, "claw_eat");
+        clawWrist = hardwareMap.get(Servo.class, "claw_wrist");
         rightShoulder = hardwareMap.get(DcMotor.class, "right_shoulder");
-        //rightElbow = hardwareMap.get(DcMotor.class, "right_elbow");
+        rightElbow = hardwareMap.get(DcMotor.class, "right_elbow");
         leftShoulder = hardwareMap.get(DcMotor.class, "left_shoulder");
-        //leftElbow = hardwareMap.get(DcMotor.class, "left_elbow")
+        leftElbow = hardwareMap.get(DcMotor.class, "left_elbow");
 
         // set directions
         leftFront.setDirection(DcMotor.Direction.REVERSE);
@@ -72,7 +72,6 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
         // Wait for the game to start (driver presses START)
         waitForStart();
-        initAprilTag();
         while (opModeIsActive()) {
 
             double axial = -gamepad1.left_stick_y;
@@ -91,55 +90,34 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 canSwitch = true;
             }
 
-            /* things on the to do list
-            if (gamepad1.right_bumper){
-                clawWrist.setPosition(0.5);
-                clawWrist.setPower(-0.5);
-            }*/
-
-            if (gamepad2.left_trigger > 0){
-                leftShoulder.setPower(gamepad2.left_trigger);
-                rightShoulder.setPower(gamepad2.left_trigger);
-            } else if (gamepad2.right_trigger > 0){
-                leftShoulder.setPower(- gamepad2.left_trigger);
-                rightShoulder.setPower(- gamepad2.left_trigger);
+            if (gamepad2.left_stick_y < 0) {
+                leftShoulder.setPower(-gamepad2.left_stick_y);
+                rightShoulder.setPower(gamepad2.left_stick_y);
+            }else if (gamepad2.left_stick_y > 0){
+                leftShoulder.setPower(gamepad2.left_stick_y);
+                rightShoulder.setPower(-gamepad2.left_stick_y);
             }
 
-            leftFront.setPower(reverse_multiplier * leftFront_pwr);
-            rightFront.setPower(reverse_multiplier * rightFront_pwr);
-            leftBack.setPower(reverse_multiplier * leftBack_pwr);
-            rightBack.setPower(reverse_multiplier * rightBack_pwr);
-            AprilTagDetections();
-            telemetry.update();
+            if (gamepad2.right_stick_y < 0) {
+                leftElbow.setPower(gamepad2.right_stick_y);
+                rightElbow.setPower(-gamepad2.right_stick_y);
+            }else if (gamepad2.right_stick_y > 0){
+                leftElbow.setPower(gamepad2.right_stick_y);
+                rightElbow.setPower(-gamepad2.right_stick_y);
+            }
 
-        }
-    }
-    public void initAprilTag(){
-        aprilTag = new AprilTagProcessor.Builder().build();
-        aprilTag.setDecimation(2);
-        if (USE_WEBCAM) {
-            visionPortal = new VisionPortal.Builder()
-                    .setCamera(hardwareMap.get(WebcamName.class, "Eyes"))
-                    .addProcessor(aprilTag)
-                    .build();
-        } else {
-            visionPortal = new VisionPortal.Builder()
-                    .setCamera(BuiltinCameraDirection.BACK)
-                    .addProcessor(aprilTag)
-                    .build();
-        }
-    }
-    @SuppressLint("DefaultLocale")
-    public void AprilTagDetections(){
-        List<AprilTagDetection> currentDetections = aprilTag.getDetections();
-        for (AprilTagDetection detection : currentDetections) {
-            if (detection.metadata != null) {
-                telemetry.addLine(String.format("\n==== (ID %d) %s", detection.id, detection.metadata.name));
-            } else {
-                telemetry.addLine(String.format("\n==== (ID %d) Unknown", detection.id));
-                //telemetry.addLine(String.format("Center %6.0f %6.0f   (pixels)", detection.center.x, detection.center.y));
+            if (gamepad2.x) {
+                clawWrist.setPosition(1);
+            } else if (gamepad2.b) {
+                clawWrist.setPosition(0);
+            }
+
+                leftFront.setPower(reverse_multiplier * leftFront_pwr);
+                rightFront.setPower(reverse_multiplier * rightFront_pwr);
+                leftBack.setPower(reverse_multiplier * leftBack_pwr);
+                rightBack.setPower(reverse_multiplier * rightBack_pwr);
+                telemetry.update();
+
             }
         }
-    }
-
 }
