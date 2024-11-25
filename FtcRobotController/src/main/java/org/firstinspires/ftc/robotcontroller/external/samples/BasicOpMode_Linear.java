@@ -116,7 +116,6 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 rightFront.setPower(reverse_multiplier * rightFront_pwr);
                 leftBack.setPower(reverse_multiplier * leftBack_pwr);
                 rightBack.setPower(reverse_multiplier * rightBack_pwr);
-                telemetry.update();
 
             }
         }
