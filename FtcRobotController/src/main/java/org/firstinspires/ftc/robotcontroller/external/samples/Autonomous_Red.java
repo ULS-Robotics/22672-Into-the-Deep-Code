@@ -76,8 +76,10 @@ public class Autonomous_Red extends LinearOpMode {
         rightBack.setDirection(DcMotor.Direction.FORWARD);
 
         // Wait for the game to start (driver presses START)
-        initAprilTag();
+
         waitForStart();
+
+        initAprilTag();
 
         sleep(100);
 
