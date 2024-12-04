@@ -43,10 +43,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private CRServo clawEat;
 
     private Servo clawWrist;
-    private AprilTagProcessor aprilTag;
     private int reverse_multiplier = -1;
-    private final boolean USE_WEBCAM = true;
-    private VisionPortal visionPortal;
     private boolean canSwitch = true;
 
     @Override
@@ -69,6 +66,11 @@ public class BasicOpMode_Linear extends LinearOpMode {
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
+
+        leftShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
@@ -94,8 +96,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 leftShoulder.setPower(-gamepad2.left_stick_y);
                 rightShoulder.setPower(gamepad2.left_stick_y);
             }else if (gamepad2.left_stick_y > 0){
-                leftShoulder.setPower(gamepad2.left_stick_y);
-                rightShoulder.setPower(-gamepad2.left_stick_y);
+                leftShoulder.setPower(-gamepad2.left_stick_y);
+                rightShoulder.setPower(gamepad2.left_stick_y);
             }
 
             if (gamepad2.right_stick_y < 0) {
@@ -106,17 +108,47 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 rightElbow.setPower(-gamepad2.right_stick_y);
             }
 
-            if (gamepad2.x) {
-                clawWrist.setPosition(1);
-            } else if (gamepad2.b) {
-                clawWrist.setPosition(0);
+            if (gamepad2.left_bumper) {
+                clawWrist.setPosition(0.5);
+            } else if (gamepad2.right_bumper) {
+                clawWrist.setPosition(-0.5);
             }
 
-                leftFront.setPower(reverse_multiplier * leftFront_pwr);
-                rightFront.setPower(reverse_multiplier * rightFront_pwr);
-                leftBack.setPower(reverse_multiplier * leftBack_pwr);
-                rightBack.setPower(reverse_multiplier * rightBack_pwr);
-
+            if (gamepad2.left_trigger > 0){
+                clawEat.setPower(- gamepad2.left_trigger);
+            }else if (gamepad2.right_trigger > 0){
+                clawEat.setPower(gamepad2.right_trigger);
             }
+
+            leftFront.setPower(reverse_multiplier * leftFront_pwr);
+            rightFront.setPower(reverse_multiplier * rightFront_pwr);
+            leftBack.setPower(reverse_multiplier * leftBack_pwr);
+            rightBack.setPower(reverse_multiplier * rightBack_pwr);
+
+            telemetry.addData("Left Shoulder Power: ", leftShoulder.getPower());
+            telemetry.addData("Right Shoulder Power: ", rightShoulder.getPower());
+            telemetry.addData("Left Elbow Power: ", leftElbow.getPower());
+            telemetry.addData("Right Elbow Power: ", rightElbow.getPower());
+
+            telemetry.addData("", "\n");
+            telemetry.addData("Left Shoulder Position", leftShoulder.getCurrentPosition());
+            telemetry.addData("Right Shoulder Position", rightShoulder.getCurrentPosition());
+            telemetry.addData("Left Elbow Position", leftElbow.getCurrentPosition());
+            telemetry.addData("Right Elbow Position", rightElbow.getCurrentPosition());
+            telemetry.addData("", "\n");
+
+            telemetry.addData("gamepad2.right_stick_y: ", gamepad2.right_stick_y);
+            telemetry.addData("gamepad2.left_stick_y: ", gamepad2.left_stick_y);
+            telemetry.addData("gamepad2.left_stick_y: ", gamepad2.left_stick_y);
+            telemetry.addData("gamepad2.right_stick_y: ", gamepad2.right_stick_y);
+            telemetry.addData("", "\n");
+
+            telemetry.addData("Front Left Power", leftFront_pwr * reverse_multiplier);
+            telemetry.addData("Front Right Power", rightFront_pwr* reverse_multiplier);
+            telemetry.addData("Back Left Power", leftBack_pwr * reverse_multiplier);
+            telemetry.addData("Back Right Power", rightBack_pwr * reverse_multiplier);
+
+            telemetry.update();
         }
+    }
 }
