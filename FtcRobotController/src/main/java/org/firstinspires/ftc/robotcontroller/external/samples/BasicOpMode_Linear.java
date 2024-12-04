@@ -115,9 +115,9 @@ public class BasicOpMode_Linear extends LinearOpMode {
             }
 
             if (gamepad2.left_trigger > 0){
-                clawEat.setPower(- gamepad2.left_trigger);
+                clawEat.setPower(- 1);
             }else if (gamepad2.right_trigger > 0){
-                clawEat.setPower(gamepad2.right_trigger);
+                clawEat.setPower(1);
             }
 
             leftFront.setPower(reverse_multiplier * leftFront_pwr);
