@@ -46,6 +46,10 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private int reverse_multiplier = -1;
     private boolean canSwitch = true;
 
+    private int arm_position_index = 0;
+
+    private boolean FirstClawTurn = true;
+
     @Override
     public void runOpMode() {
 
@@ -67,10 +71,18 @@ public class BasicOpMode_Linear extends LinearOpMode {
         leftBack.setDirection(DcMotor.Direction.REVERSE);
         rightBack.setDirection(DcMotor.Direction.FORWARD);
 
+        rightElbow.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftElbow.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftShoulder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightShoulder.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         leftShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        leftElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        rightShoulder.setDirection(DcMotorSimple.Direction.FORWARD);
+        rightElbow.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftShoulder.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftElbow.setDirection(DcMotorSimple.Direction.FORWARD);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
@@ -92,31 +104,48 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 canSwitch = true;
             }
 
-            if (gamepad2.left_stick_y < 0) {
-                leftShoulder.setPower(-gamepad2.left_stick_y);
-                rightShoulder.setPower(gamepad2.left_stick_y);
-            }else if (gamepad2.left_stick_y > 0){
-                leftShoulder.setPower(-gamepad2.left_stick_y);
-                rightShoulder.setPower(gamepad2.left_stick_y);
+            if (gamepad2.y){
+                leftShoulder.setTargetPosition(1273);
+                rightShoulder.setTargetPosition(-1294);
+                leftShoulder.setPower(0.5);
+                rightShoulder.setPower(-0.5);
+                leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            }else if (gamepad2.b){
+                leftShoulder.setTargetPosition(300);
+                rightShoulder.setTargetPosition(-323);
+                leftShoulder.setPower(0.5);
+                rightShoulder.setPower(-0.5);
+                leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+            }else if (gamepad2.a){
+                leftShoulder.setTargetPosition(0);
+                rightShoulder.setTargetPosition(0);
+                leftShoulder.setPower(0.5);
+                rightShoulder.setPower(-0.5);
+                leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
             }
 
-            if (gamepad2.right_stick_y < 0) {
-                leftElbow.setPower(gamepad2.right_stick_y);
-                rightElbow.setPower(-gamepad2.right_stick_y);
-            }else if (gamepad2.right_stick_y > 0){
-                leftElbow.setPower(gamepad2.right_stick_y);
-                rightElbow.setPower(-gamepad2.right_stick_y);
+            if (gamepad2.right_trigger < 0) {
+                leftElbow.setPower(gamepad2.right_trigger);
+                rightElbow.setPower(-gamepad2.right_trigger);
+            }else if (gamepad2.right_trigger > 0){
+                leftElbow.setPower(gamepad2.right_trigger);
+                rightElbow.setPower(-gamepad2.right_trigger);
             }
 
             if (gamepad2.left_bumper) {
-                clawWrist.setPosition(0.5);
+                clawWrist.setPosition(0.8);
             } else if (gamepad2.right_bumper) {
                 clawWrist.setPosition(-0.5);
             }
 
-            if (gamepad2.left_trigger > 0){
+            if (gamepad2.dpad_down){
                 clawEat.setPower(- 1);
-            }else if (gamepad2.right_trigger > 0){
+            }else if (gamepad2.dpad_up){
                 clawEat.setPower(1);
             }
 

@@ -18,6 +18,7 @@ import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @TeleOp(name="AUTONOMOUS *Red*", group="Linear OpMode")
 
@@ -83,7 +84,7 @@ public class Autonomous_Red extends LinearOpMode {
 
         sleep(100);
 
-        MoveArms(1000, 200); //TEMP DATA
+        MoveArms_POSITION("H"); //TEMP DATA
 
         MoveBase(0.5, 0,0, -1); //AGAIN, TEMP DATA
 
@@ -93,6 +94,7 @@ public class Autonomous_Red extends LinearOpMode {
         while (opModeIsActive()) {
 
             /*
+            How this code should be done in autonomous
             double axial = -gamepad1.left_stick_y;
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
@@ -113,37 +115,84 @@ public class Autonomous_Red extends LinearOpMode {
                 if (distance_value > DesiredDistance_INCH) {
                     MoveBase(0.5,0,0,-1);
                 }else{
-                    MoveBase(0, 0, 0.5, -1);
-                    MoveArms(100, 200);
-                    UseClaw(-1, false);
+                    break;
                 }
 
             }else{
                 //turn until sees the correct apriltag
                 MoveBase(0, 0.3, 0, -1);
+
             }
         }   //END MAIN LOOP
+        MoveBase(0, 0, 0.5, -1);
+        MoveArms_POSITION("R");
+        UseClaw(0.8, false);
+        MoveElbow_ANALOG(0);
+        MoveBase(0,0,-0.5, -1);
+        MoveArms_POSITION("H");
+        MoveElbow_ANALOG(100);
+        UseClaw(0.25, true);
+        MoveBase(-0.5, 0, 0, -1);
+        MoveArms_POSITION("R");
+
     }
    // packaged functions to move things
-    public void MoveArms(int Shoulder_position, int Elbow_position){
+    public void MoveElbow_ANALOG(int Elbow_position){
         /*This function uses ENCODERS to move arms to a given POSITION
         * i.e.: Set a given location measured through experiment and
         *       put them into this function
         * */
-        leftShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rightShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         leftElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        leftShoulder.setTargetPosition(Shoulder_position);
-        rightShoulder.setTargetPosition(-Shoulder_position);
         leftElbow.setTargetPosition(Elbow_position);
         rightElbow.setTargetPosition(- Elbow_position);
 
-        leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftElbow.setPower(0.5);
+        rightShoulder.setPower(-0.5);
+
         leftElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    }
+
+    public void MoveArms_POSITION(String Position_Code){
+
+
+        /*This will move the arm to a given position
+        *               *WE SHALL USE THIS MORE OFTEN*
+        * Position Code: H, M, R
+        *   H = high
+        *   M = medium (horizontal)
+        *   R = reset to 0
+        *
+        * IMPORTANT NOTE: THIS FUNCTION WILL ONLY MOVE THE SHOULDER BUT **NOT**
+        *                 THE ELBOW
+        * */
+
+        if (Objects.equals(Position_Code, "H")){
+            leftShoulder.setTargetPosition(1273);
+            rightShoulder.setTargetPosition(-1294);
+            leftShoulder.setPower(0.5);
+            rightShoulder.setPower(-0.5);
+            leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        }else if (Objects.equals(Position_Code, "M")){
+            leftShoulder.setTargetPosition(300);
+            rightShoulder.setTargetPosition(-323);
+            leftShoulder.setPower(0.5);
+            rightShoulder.setPower(-0.5);
+            leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        }else if (Objects.equals(Position_Code, "R")){
+            leftShoulder.setTargetPosition(0);
+            rightShoulder.setTargetPosition(0);
+            leftShoulder.setPower(0.5);
+            rightShoulder.setPower(-0.5);
+            leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+            rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        }
     }
 
     public void MoveBase(double axial,
