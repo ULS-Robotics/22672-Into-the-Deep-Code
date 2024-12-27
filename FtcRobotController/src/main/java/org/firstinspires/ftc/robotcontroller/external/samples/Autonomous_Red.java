@@ -55,6 +55,8 @@ public class Autonomous_Red extends LinearOpMode {
 
     private double DesiredDistance_INCH = 12;
 
+    private int RunTimeCounter = 0;
+
     @Override
     public void runOpMode() {
 
@@ -81,13 +83,6 @@ public class Autonomous_Red extends LinearOpMode {
         waitForStart();
 
         initAprilTag();
-
-        sleep(100);
-
-        MoveArms_POSITION("H"); //TEMP DATA
-
-        MoveBase(0.5, 0,0, -1); //AGAIN, TEMP DATA
-
         //first extend the arms to load the specimen and then move towards the center structure
         // then enter the main loop
 
@@ -100,6 +95,14 @@ public class Autonomous_Red extends LinearOpMode {
             double yaw = gamepad1.right_stick_x;
             */
 
+            if (RunTimeCounter == 1) {
+                sleep(100);
+
+                MoveArms_POSITION("H"); //TEMP DATA
+
+                MoveBase(0.5, 0, 0, -1); //AGAIN, TEMP DATA
+            }
+
             List<Object> AprilTagResults = AprilTagReturn();
 
             double yaw_value = Double.parseDouble(AprilTagResults.get(5).toString());
@@ -107,34 +110,9 @@ public class Autonomous_Red extends LinearOpMode {
 
             int AprilTag_ID_Localized = Integer.parseInt(AprilTagResults.get(0).toString());
 
-            if ((AprilTagResults.get(1) != null) && (AprilTag_ID_Localized == DesiredAprilTag_ID)
-                && (yaw_value <= 5)
-            ){
-                //turn to the right
 
-                if (distance_value > DesiredDistance_INCH) {
-                    MoveBase(0.5,0,0,-1);
-                }else{
-                    break;
-                }
-
-            }else{
-                //turn until sees the correct apriltag
-                MoveBase(0, 0.3, 0, -1);
-
-            }
-        }   //END MAIN LOOP
-        MoveBase(0, 0, 0.5, -1);
-        MoveArms_POSITION("R");
-        UseClaw(0.8, false);
-        MoveElbow_ANALOG(0);
-        MoveBase(0,0,-0.5, -1);
-        MoveArms_POSITION("H");
-        MoveElbow_ANALOG(100);
-        UseClaw(0.25, true);
-        MoveBase(-0.5, 0, 0, -1);
-        MoveArms_POSITION("R");
-
+        }
+        RunTimeCounter += 1;
     }
    // packaged functions to move things
     public void MoveElbow_ANALOG(int Elbow_position){
@@ -215,6 +193,21 @@ public class Autonomous_Red extends LinearOpMode {
         rightFront.setPower(ReverseMultiplier * rightFront_pwr);
         leftBack.setPower(ReverseMultiplier * leftBack_pwr);
         rightBack.setPower(ReverseMultiplier * rightBack_pwr);
+    }
+
+    public void MoveBase_TO_POSITION(List<Integer> Position){
+        /*It takes a list input:
+        * INDEX     |       Value
+        * [0]               Left Front Position
+        * [1]               Right Front Position
+        * [2]               Left Back Position
+        * [3]               Right Back Position
+        * */
+
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
     public void UseClaw(double turn_position, boolean spit){
