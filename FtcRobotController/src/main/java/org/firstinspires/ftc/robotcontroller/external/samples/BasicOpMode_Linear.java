@@ -7,6 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import java.lang.Math;
+import java.util.ArrayList;
 import java.util.List;
 
 @TeleOp(name="OpModeCode2024", group="Linear OpMode")
@@ -30,6 +31,10 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private Servo clawWrist;
     private int reverse_multiplier = -1;
     private boolean canSwitch = true;
+
+    private int RuntimeCounter = 0;
+
+    private List<Double> RegisteredPower = new ArrayList<>();
 
     @Override
     public void runOpMode() {
@@ -85,12 +90,17 @@ public class BasicOpMode_Linear extends LinearOpMode {
 
             double leftInputPower = gamepad1.left_trigger;
             double rightInputPower = gamepad1.right_trigger;
-
-            double axial = (leftInputPower > rightInputPower)? leftInputPower : -rightInputPower;
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
-            MoveBase(axial,reverse_multiplier,0);
             MoveBase_ANALOG(lateral, yaw, reverse_multiplier);
+            if (RuntimeCounter > 3) {
+                MoveBase(RegisteredPower, reverse_multiplier);
+                RegisteredPower.clear();
+                RuntimeCounter = 0;
+            }else{
+                double power = (leftInputPower > rightInputPower) ? leftInputPower : -rightInputPower;
+                RegisteredPower.add(power);
+            }
 
             if ((gamepad1.a) && (canSwitch)) {
                 canSwitch = false;
@@ -99,7 +109,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 canSwitch = true;
             }
 
-            if (gamepad2.y){
+            if (gamepad2.y) {
                 leftShoulder.setTargetPosition(900);
                 rightShoulder.setTargetPosition(-900);
                 leftShoulder.setPower(0.5);
@@ -107,7 +117,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            }else if (gamepad2.b){
+            } else if (gamepad2.b) {
                 leftShoulder.setTargetPosition(242);
                 rightShoulder.setTargetPosition(-249);
                 leftShoulder.setPower(0.5);
@@ -115,7 +125,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-            }else if (gamepad2.a){
+            } else if (gamepad2.a) {
                 leftShoulder.setTargetPosition(0);
                 rightShoulder.setTargetPosition(0);
                 leftShoulder.setPower(0.5);
@@ -127,7 +137,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             if (gamepad2.left_trigger > 0) {
                 leftElbow.setPower(-gamepad2.left_trigger);
                 rightElbow.setPower(-gamepad2.left_trigger);
-            }else if (gamepad2.right_trigger > 0){
+            } else if (gamepad2.right_trigger > 0) {
                 leftElbow.setPower(gamepad2.right_trigger);
                 rightElbow.setPower(gamepad2.right_trigger);
             }
@@ -138,9 +148,9 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 clawWrist.setPosition(-0.1);
             }
 
-            if (gamepad2.dpad_down){
-                clawEat.setPower(- 1);
-            }else if (gamepad2.dpad_up){
+            if (gamepad2.dpad_down) {
+                clawEat.setPower(-1);
+            } else if (gamepad2.dpad_up) {
                 clawEat.setPower(1);
             }
 
@@ -161,24 +171,21 @@ public class BasicOpMode_Linear extends LinearOpMode {
             telemetry.addData("Back Left POS", leftBack.getCurrentPosition());
             telemetry.addData("Back Right POS", rightBack.getCurrentPosition());
             telemetry.update();
+            RuntimeCounter += 1;
         }
     }
-    public void MoveBase(double power, int ReverseMultiplier, int ByPass) {
+
+    public void MoveBase(List<Double> PowerList, int ReverseMultiplier) {
         /*This function uses an analog input from the controller and uses a mathematical function
          * to smoothen the input and maybe amplify it a little but we can always change it though*/
-        if (ByPass == 0) {
-            leftFront.setPower(ReverseMultiplier * SmoothCurve(power));
-            rightFront.setPower(ReverseMultiplier * SmoothCurve(power));
-            leftBack.setPower(ReverseMultiplier * SmoothCurve(power));
-            rightBack.setPower(ReverseMultiplier * SmoothCurve(power));
-        }else{ //in case we need a really jerky robot
-            leftFront.setPower(ReverseMultiplier * power);
-            rightFront.setPower(ReverseMultiplier * power);
-            leftBack.setPower(ReverseMultiplier * power);
-            rightBack.setPower(ReverseMultiplier * power);
-        }
+        double POWER = ReverseMultiplier * MovingAverage(PowerList);
+        leftFront.setPower(POWER);
+        rightFront.setPower(POWER);
+        leftBack.setPower(POWER);
+        rightBack.setPower(POWER);
     }
-    public void MoveBase_ANALOG(double lateral, double yaw, int ReverseMultiplier){
+
+    public void MoveBase_ANALOG(double lateral, double yaw, int ReverseMultiplier) {
         /*
          *       This function uses emulated joystick inputs in
          * the range of [-1.0, 1.0] to move the robot
@@ -186,18 +193,23 @@ public class BasicOpMode_Linear extends LinearOpMode {
          *       lateral is the x coordinate for the left stick on the control pad
          *       yaw is the x coordinate for the right stick on the control pad
          * */
-        double axial = 0;
-        double leftFront_pwr = axial - lateral + yaw;
-        double rightFront_pwr = axial + lateral - yaw;
-        double leftBack_pwr = axial + lateral + yaw;
-        double rightBack_pwr = axial - lateral - yaw;
+        double leftFront_pwr = -lateral + yaw;
+        double rightFront_pwr = lateral - yaw;
+        double leftBack_pwr = lateral + yaw;
+        double rightBack_pwr = -lateral - yaw;
         leftFront.setPower(ReverseMultiplier * leftFront_pwr);
         rightFront.setPower(ReverseMultiplier * rightFront_pwr);
         leftBack.setPower(ReverseMultiplier * leftBack_pwr);
         rightBack.setPower(ReverseMultiplier * rightBack_pwr);
     }
 
-    public double SmoothCurve(double x){
-        return 6*Math.pow(x, 5) - 15*Math.pow(x, 4) + 10*Math.pow(x, 3);
+
+    public double MovingAverage(List<Double> PowerArray) {
+        double sum = 0;
+        int length = PowerArray.size();
+        for (int i = 0 ; i < length ; i++){
+            sum += PowerArray.get(i);
+        }
+        return sum / length;
     }
 }
