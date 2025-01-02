@@ -212,4 +212,5 @@ public class BasicOpMode_Linear extends LinearOpMode {
         }
         return sum / length;
     }
+
 }
