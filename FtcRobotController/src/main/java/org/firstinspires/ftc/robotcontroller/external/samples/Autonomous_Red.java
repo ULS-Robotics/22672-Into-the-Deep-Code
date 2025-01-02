@@ -130,8 +130,8 @@ public class Autonomous_Red extends LinearOpMode {
             }else{
                 MoveBase_USE_ANALOG_STICK(0,-0.5, 0,-1);
             }
+            RunTimeCounter += 1;
         }
-        RunTimeCounter += 1;
     }
     // packaged functions to move things
     public void MoveElbow_ANALOG(int Elbow_position){
