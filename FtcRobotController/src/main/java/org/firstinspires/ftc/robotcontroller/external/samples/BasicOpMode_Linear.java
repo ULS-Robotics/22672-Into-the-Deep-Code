@@ -82,7 +82,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
         rightShoulder.setDirection(DcMotorSimple.Direction.FORWARD);
         rightElbow.setDirection(DcMotorSimple.Direction.REVERSE);
         leftShoulder.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftElbow.setDirection(DcMotorSimple.Direction.FORWARD);
+        leftElbow.setDirection(DcMotorSimple.Direction.REVERSE);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
