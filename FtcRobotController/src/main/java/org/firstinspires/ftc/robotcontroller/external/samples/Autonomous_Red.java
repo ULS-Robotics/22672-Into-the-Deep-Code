@@ -55,6 +55,8 @@ public class Autonomous_Red extends LinearOpMode {
 
     private double DesiredDistance_INCH = 12;
 
+    private int RunTimeCounter = 0;
+
     @Override
     public void runOpMode() {
 
@@ -81,13 +83,6 @@ public class Autonomous_Red extends LinearOpMode {
         waitForStart();
 
         initAprilTag();
-
-        sleep(100);
-
-        MoveArms_POSITION("H"); //TEMP DATA
-
-        MoveBase(0.5, 0,0, -1); //AGAIN, TEMP DATA
-
         //first extend the arms to load the specimen and then move towards the center structure
         // then enter the main loop
 
@@ -95,10 +90,22 @@ public class Autonomous_Red extends LinearOpMode {
 
             /*
             How this code should be done in autonomous
+            *DO NOT UNCOMMENT!* This is for demonstrative purposes only
             double axial = -gamepad1.left_stick_y;
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
             */
+
+            if (RunTimeCounter == 1) {
+                //uncomment the following for testing purposes
+                //sleep(100);
+
+                MoveArms_POSITION("H"); //TEMP DATA
+
+                MoveBase_USE_ANALOG_STICK(0.5, 0, 0, -1);
+                //AGAIN, TEMP DATA
+                /*This will move the robot forward*/
+            }
 
             List<Object> AprilTagResults = AprilTagReturn();
 
@@ -107,41 +114,32 @@ public class Autonomous_Red extends LinearOpMode {
 
             int AprilTag_ID_Localized = Integer.parseInt(AprilTagResults.get(0).toString());
 
-            if ((AprilTagResults.get(1) != null) && (AprilTag_ID_Localized == DesiredAprilTag_ID)
-                && (yaw_value <= 5)
-            ){
-                //turn to the right
-
-                if (distance_value > DesiredDistance_INCH) {
-                    MoveBase(0.5,0,0,-1);
+            if ((AprilTag_ID_Localized == DesiredAprilTag_ID
+                    /*Note, it is the NUMBER of the apriltag!*/)
+                    &&(yaw_value < 5 /*degrees*/ )
+                    &&(distance_value > 10 /*inches, because FIRST*/)){
+                /*if true, it means we are align with whatever apriltage is
+                 * So we move forward
+                 * */
+                List<Integer> PositionList = UpdateDistanceList(1,1,2,1);
+                if (distance_value > DesiredDistance_INCH){
+                    MoveBase_USE_POSITION(PositionList);
                 }else{
-                    break;
+                    MoveArms_POSITION("M");
                 }
-
             }else{
-                //turn until sees the correct apriltag
-                MoveBase(0, 0.3, 0, -1);
-
+                MoveBase_USE_ANALOG_STICK(0,-0.5, 0,-1);
             }
-        }   //END MAIN LOOP
-        MoveBase(0, 0, 0.5, -1);
-        MoveArms_POSITION("R");
-        UseClaw(0.8, false);
-        MoveElbow_ANALOG(0);
-        MoveBase(0,0,-0.5, -1);
-        MoveArms_POSITION("H");
-        MoveElbow_ANALOG(100);
-        UseClaw(0.25, true);
-        MoveBase(-0.5, 0, 0, -1);
-        MoveArms_POSITION("R");
+            RunTimeCounter += 1;
 
+        }
     }
-   // packaged functions to move things
+    // packaged functions to move things
     public void MoveElbow_ANALOG(int Elbow_position){
         /*This function uses ENCODERS to move arms to a given POSITION
-        * i.e.: Set a given location measured through experiment and
-        *       put them into this function
-        * */
+         * i.e.: Set a given location measured through experiment and
+         *       put them into this function
+         * */
         leftElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
@@ -159,15 +157,15 @@ public class Autonomous_Red extends LinearOpMode {
 
 
         /*This will move the arm to a given position
-        *               *WE SHALL USE THIS MORE OFTEN*
-        * Position Code: H, M, R
-        *   H = high
-        *   M = medium (horizontal)
-        *   R = reset to 0
-        *
-        * IMPORTANT NOTE: THIS FUNCTION WILL ONLY MOVE THE SHOULDER BUT **NOT**
-        *                 THE ELBOW
-        * */
+         *               *WE SHALL USE THIS MORE OFTEN*
+         * Position Code: H, M, R
+         *   H = high
+         *   M = medium (horizontal)
+         *   R = reset to 0
+         *
+         * IMPORTANT NOTE: THIS FUNCTION WILL ONLY MOVE THE SHOULDER BUT **NOT**
+         *                 THE ELBOW
+         * */
 
         if (Objects.equals(Position_Code, "H")){
             leftShoulder.setTargetPosition(1273);
@@ -195,17 +193,17 @@ public class Autonomous_Red extends LinearOpMode {
         }
     }
 
-    public void MoveBase(double axial,
-                         double lateral,
-                         double yaw,
-                         int ReverseMultiplier){
+    public void MoveBase_USE_ANALOG_STICK(double axial,
+                                          double lateral,
+                                          double yaw,
+                                          int ReverseMultiplier){
         /*
-        *       This function uses emulated joystick inputs in
-        * the range of [-1.0, 1.0] to move the robot
-        * i.e.: axial is the y coordinate for the left stick on the control pad
-        *       lateral is the x coordinate for the left stick on the control pad
-        *       yaw is the x coordinate for the right stick on the control pad
-        * */
+         *       This function uses emulated joystick inputs in
+         * the range of [-1.0, 1.0] to move the robot
+         * i.e.: axial is the y coordinate for the left stick on the control pad
+         *       lateral is the x coordinate for the left stick on the control pad
+         *       yaw is the x coordinate for the right stick on the control pad
+         * */
 
         double leftFront_pwr = axial - lateral + yaw;
         double rightFront_pwr = axial + lateral - yaw;
@@ -217,10 +215,36 @@ public class Autonomous_Red extends LinearOpMode {
         rightBack.setPower(ReverseMultiplier * rightBack_pwr);
     }
 
+    public void MoveBase_USE_POSITION(List<Integer> Position){
+        /*It takes a list input:
+         * INDEX     |       Value
+         * [0]               Left Front Position
+         * [1]               Right Front Position
+         * [2]               Left Back Position
+         * [3]               Right Back Position
+         * */
+
+        leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        leftFront.setTargetPosition(Position.get(0));
+        rightFront.setTargetPosition(Position.get(1));
+        leftBack.setTargetPosition(Position.get(2));
+        rightBack.setTargetPosition(Position.get(3));
+
+        leftFront.setPower(0.5);
+        rightFront.setPower(0.5);
+        leftBack.setPower(0.5);
+        rightBack.setPower(0.5);
+
+    }
+
     public void UseClaw(double turn_position, boolean spit){
 
         /*This function utilizes the claw by specifying the turning location for the
-        * claw wrist and uses a boolean expression to manage whether or not to spit the block */
+         * claw wrist and uses a boolean expression to manage whether or not to spit the block */
 
         clawWrist.setPosition(turn_position);
         if (spit){
@@ -254,19 +278,19 @@ public class Autonomous_Red extends LinearOpMode {
     private List<Object> AprilTagReturn() {
 
         /*This function will gather the data from the recognized April Tags in a list
-        *
-        *       <NOTE> The way this function is currently implemented is not the most ideal way to
-        *              do so. By which I mean that it objectified the List output, this is known to
-        *              cause:
-        *                   + Extremely insufficient memory usage
-        *                   + Potential danger of a memory leak
-        *                   + Redundant conversion between data types, when used, is required
-        *                   + Potentially slowing down the processing speed of the robot
-        *              But with the given time, it is the best method I can come up with. So in
-        *              the future, if anyone is more trained with Java (anyone is better
-        *              compared to me, frankly)
-        *
-        * */
+         *
+         *       <NOTE> The way this function is currently implemented is not the most ideal way to
+         *              do so. By which I mean that it objectified the List output, this is known to
+         *              cause:
+         *                   + Extremely insufficient memory usage
+         *                   + Potential danger of a memory leak
+         *                   + Redundant conversion between data types, when used, is required
+         *                   + Potentially slowing down the processing speed of the robot
+         *              But with the given time, it is the best method I can come up with. So in
+         *              the future, if anyone is more trained with Java (anyone is better
+         *              compared to me, frankly)
+         *
+         * */
 
         List<Object> AprilTagResults = new ArrayList<>();
 
@@ -311,6 +335,17 @@ public class Autonomous_Red extends LinearOpMode {
         AprilTagResults.add(yaw_position);
         // AprilTagResults = [AprilTag_ID, AprilTage_Name, x_position, y_position, z_position]
         return AprilTagResults;
+    }
+
+    public List<Integer> UpdateDistanceList(Integer LF, Integer RF, Integer LB,
+                                            Integer RB){
+        List<Integer> Distance = new ArrayList<>();
+        Distance.add(LF);
+        Distance.add(RF);
+        Distance.add(LB);
+        Distance.add(RB);
+
+        return Distance;
     }
 }
 
