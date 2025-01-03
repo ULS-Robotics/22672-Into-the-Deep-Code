@@ -102,9 +102,12 @@ public class Autonomous_Red extends LinearOpMode {
 
                 MoveArms_POSITION("H"); //TEMP DATA
 
-                MoveBase_USE_ANALOG_STICK(0.5, 0, 0, -1);
+                MoveBase_USE_POSITION(UpdateDistanceList(100, 200, 300, 400));
                 //AGAIN, TEMP DATA
                 /*This will move the robot forward*/
+
+                MoveElbow_ANALOG(-1423,1417);
+                MoveElbow_ANALOG(0,0);
             }
 
             List<Object> AprilTagResults = AprilTagReturn();
@@ -135,7 +138,7 @@ public class Autonomous_Red extends LinearOpMode {
         }
     }
     // packaged functions to move things
-    public void MoveElbow_ANALOG(int Elbow_position){
+    public void MoveElbow_ANALOG(int LEFT_Elbow_Position, int RIGHT_Elbow_Position){
         /*This function uses ENCODERS to move arms to a given POSITION
          * i.e.: Set a given location measured through experiment and
          *       put them into this function
@@ -143,11 +146,11 @@ public class Autonomous_Red extends LinearOpMode {
         leftElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightElbow.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        leftElbow.setTargetPosition(Elbow_position);
-        rightElbow.setTargetPosition(- Elbow_position);
+        leftElbow.setTargetPosition(LEFT_Elbow_Position);
+        rightElbow.setTargetPosition(RIGHT_Elbow_Position);
 
         leftElbow.setPower(0.5);
-        rightShoulder.setPower(-0.5);
+        rightElbow.setPower(-0.5);
 
         leftElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
