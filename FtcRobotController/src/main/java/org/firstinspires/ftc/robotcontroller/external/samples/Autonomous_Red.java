@@ -51,9 +51,9 @@ public class Autonomous_Red extends LinearOpMode {
 
     private AprilTagProcessor aprilTag;
 
-    private int DesiredAprilTag_ID = 0;
+    private final int DesiredAprilTag_ID = 0;
 
-    private double DesiredDistance_INCH = 12;
+    private final double DesiredDistance_INCH = 12;
 
     private int RunTimeCounter = 0;
 
@@ -108,6 +108,8 @@ public class Autonomous_Red extends LinearOpMode {
 
                 MoveElbow_ANALOG(-1423,1417);
                 MoveElbow_ANALOG(0,0);
+
+                UseClaw(0.5, true);
             }
 
             List<Object> AprilTagResults = AprilTagReturn();
@@ -342,6 +344,10 @@ public class Autonomous_Red extends LinearOpMode {
 
     public List<Integer> UpdateDistanceList(Integer LF, Integer RF, Integer LB,
                                             Integer RB){
+
+        /*Helper function that can generate a list of integers from arguments, just to make
+        * my life easier.*/
+
         List<Integer> Distance = new ArrayList<>();
         Distance.add(LF);
         Distance.add(RF);
