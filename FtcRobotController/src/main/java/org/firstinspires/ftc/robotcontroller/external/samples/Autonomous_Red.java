@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.robotcontroller.external.samples;
 
 import android.annotation.SuppressLint;
+
+import androidx.annotation.NonNull;
+
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
@@ -51,9 +54,11 @@ public class Autonomous_Red extends LinearOpMode {
 
     private AprilTagProcessor aprilTag;
 
-    private final int DesiredAprilTag_ID = 0;
+    private final int DesiredAprilTag_ID = 16;
 
     private final double DesiredDistance_INCH = 12;
+
+    private boolean At_Location = false;
 
     private int RunTimeCounter = 0;
 
@@ -73,6 +78,10 @@ public class Autonomous_Red extends LinearOpMode {
         leftElbow = hardwareMap.get(DcMotor.class, "left_elbow");
 
         // set directions
+        leftFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftFront.setDirection(DcMotor.Direction.REVERSE);
         rightFront.setDirection(DcMotor.Direction.FORWARD);
         leftBack.setDirection(DcMotor.Direction.REVERSE);
@@ -95,23 +104,23 @@ public class Autonomous_Red extends LinearOpMode {
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
             */
-
-            if (RunTimeCounter == 1) {
+            /*
+            if (RunTimeCounter == 0) {
                 //uncomment the following for testing purposes
-                //sleep(100);
+                //sleep(1000);
 
-                MoveArms_POSITION("H"); //TEMP DATA
+                MoveElbow_POSITION("H"); //TEMP DATA
 
-                MoveBase_USE_POSITION(UpdateDistanceList(100, 200, 300, 400));
+                //MoveBase_USE_POSITION(UpdateDistanceList(100, 200, 300, 400));
                 //AGAIN, TEMP DATA
                 /*This will move the robot forward*/
-
-                MoveElbow_ANALOG(-1423,1417);
-                MoveElbow_ANALOG(0,0);
+            /*
+                MoveElbow_ANALOG(242, -249);
 
                 UseClaw(0.5, true);
-            }
 
+                MoveElbow_ANALOG(0, 0);
+            }*/
             List<Object> AprilTagResults = AprilTagReturn();
 
             double yaw_value = Double.parseDouble(AprilTagResults.get(5).toString());
@@ -120,23 +129,23 @@ public class Autonomous_Red extends LinearOpMode {
             int AprilTag_ID_Localized = Integer.parseInt(AprilTagResults.get(0).toString());
 
             if ((AprilTag_ID_Localized == DesiredAprilTag_ID
-                    /*Note, it is the NUMBER of the apriltag!*/)
-                    &&(yaw_value < 5 /*degrees*/ )
-                    &&(distance_value > 10 /*inches, because FIRST*/)){
+                    /*Note, it is the NUMBER of the apriltag!*/
+                )) {
                 /*if true, it means we are align with whatever apriltage is
                  * So we move forward
                  * */
-                List<Integer> PositionList = UpdateDistanceList(1,1,2,1);
-                if (distance_value > DesiredDistance_INCH){
-                    MoveBase_USE_POSITION(PositionList);
-                }else{
-                    MoveArms_POSITION("M");
+                if (distance_value > DesiredDistance_INCH) {
+                    MoveBase_USE_ANALOG_STICK(0.5,0, 0, -1);
+                } else {
+                    At_Location = true;
                 }
             }else{
-                MoveBase_USE_ANALOG_STICK(0,-0.5, 0,-1);
+                MoveBase_USE_ANALOG_STICK(0,0.5,0,-1);
+                sleep(1000);
             }
-            RunTimeCounter += 1;
-
+            if (At_Location){
+                MoveBase_USE_ANALOG_STICK(0.5,0, 0, -1);
+            }
         }
     }
     // packaged functions to move things
@@ -158,7 +167,7 @@ public class Autonomous_Red extends LinearOpMode {
         rightElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    public void MoveArms_POSITION(String Position_Code){
+    public void MoveElbow_POSITION(String Position_Code){
 
 
         /*This will move the arm to a given position
@@ -295,12 +304,18 @@ public class Autonomous_Red extends LinearOpMode {
          *              the future, if anyone is more trained with Java (anyone is better
          *              compared to me, frankly)
          *
+         *      !<WARNING>! The result array/list may contains/is full of NULLs [So check for it]
+         *                  Because it is FIRST code and they neglected conventions of programming
+         *                  and they decided to throw out NULLs whenever they can to make us suffer.
+         *                  What they should do is throw an impossible value for those fields.
+         *                  For example, for distance, instead of a NULL they should throw a -1.
+         *
          * */
 
         List<Object> AprilTagResults = new ArrayList<>();
 
         int AprilTage_ID = 0;
-        String AprilTage_Name = null;
+        String AprilTage_Name = "";
         double x_position = 0;
         double y_position = 0;
         double z_position = 0;
@@ -326,7 +341,7 @@ public class Autonomous_Red extends LinearOpMode {
                 /*INDEX 0*/ AprilTage_ID = detection.id; // int
                 /*INDEX 1*/ AprilTage_Name = detection.metadata.name; //string
                 /*INDEX 2*/ x_position = detection.robotPose.getPosition().x; //double
-                /*INDEX 3*/ y_position = detection.robotPose.getPosition().y; //double
+                /*INDEX 3*/ y_position = detection.ftcPose.range; //double
                 /*INDEX 4*/ z_position = detection.robotPose.getPosition().z; //double
                 /*INDEX 5*/ yaw_position = detection.robotPose.getOrientation().getYaw(AngleUnit.DEGREES); //double
 
@@ -338,15 +353,18 @@ public class Autonomous_Red extends LinearOpMode {
         AprilTagResults.add(y_position);
         AprilTagResults.add(z_position);
         AprilTagResults.add(yaw_position);
+        // Please **do not** uncomment this line (↓)
         // AprilTagResults = [AprilTag_ID, AprilTage_Name, x_position, y_position, z_position]
+        telemetry.update();
         return AprilTagResults;
     }
 
+    @NonNull
     public List<Integer> UpdateDistanceList(Integer LF, Integer RF, Integer LB,
                                             Integer RB){
 
         /*Helper function that can generate a list of integers from arguments, just to make
-        * my life easier.*/
+        * my life easier you don't have to use it*/
 
         List<Integer> Distance = new ArrayList<>();
         Distance.add(LF);
@@ -357,4 +375,3 @@ public class Autonomous_Red extends LinearOpMode {
         return Distance;
     }
 }
-
