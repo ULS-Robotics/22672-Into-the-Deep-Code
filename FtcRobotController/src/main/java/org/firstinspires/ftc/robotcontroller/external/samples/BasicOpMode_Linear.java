@@ -94,7 +94,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 leftShoulder.setTargetPosition(900);
                 rightShoulder.setTargetPosition(-900);
                 leftShoulder.setPower(0.5);
-                rightShoulder.setPower(-0.5);
+                rightShoulder.setPower(-0.5); //
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
