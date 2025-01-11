@@ -4,11 +4,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
-import java.lang.Math;
-import java.util.ArrayList;
-import java.util.List;
 
 @TeleOp(name="OpModeCode2024", group="Linear OpMode")
 
@@ -29,12 +25,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private CRServo clawEat;
 
     private Servo clawWrist;
-    private int reverse_multiplier = -1;
+    private int ReverseMultiplier = -1;
     private boolean canSwitch = true;
-
-    private int RuntimeCounter = 0;
-
-    private List<Double> RegisteredPower = new ArrayList<>();
 
     @Override
     public void runOpMode() {
@@ -79,32 +71,21 @@ public class BasicOpMode_Linear extends LinearOpMode {
         leftShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rightShoulder.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        rightShoulder.setDirection(DcMotorSimple.Direction.FORWARD);
-        rightElbow.setDirection(DcMotorSimple.Direction.REVERSE);
-        leftShoulder.setDirection(DcMotorSimple.Direction.FORWARD);
-        leftElbow.setDirection(DcMotorSimple.Direction.REVERSE);
+        rightShoulder.setDirection(DcMotor.Direction.FORWARD);
+        leftShoulder.setDirection(DcMotor.Direction.FORWARD);
+
+        leftElbow.setDirection(DcMotor.Direction.FORWARD);
+        rightElbow.setDirection(DcMotor.Direction.REVERSE);
 
         // Wait for the game to start (driver presses START)
         waitForStart();
         while (opModeIsActive()) {
-
-            double leftInputPower = gamepad1.left_trigger;
-            double rightInputPower = gamepad1.right_trigger;
-            double lateral = gamepad1.left_stick_x;
-            double yaw = gamepad1.right_stick_x;
-            MoveBase_ANALOG(lateral, yaw, reverse_multiplier);
-            if (RuntimeCounter > 3) {
-                MoveBase(RegisteredPower, reverse_multiplier);
-                RegisteredPower.clear();
-                RuntimeCounter = 0;
-            }else{
-                double power = (leftInputPower > rightInputPower) ? leftInputPower : -rightInputPower;
-                RegisteredPower.add(power);
-            }
+            double power = (gamepad1.left_trigger > gamepad1.right_trigger) ?
+                    gamepad1.left_trigger : -gamepad1.right_trigger;
 
             if ((gamepad1.a) && (canSwitch)) {
                 canSwitch = false;
-                reverse_multiplier *= -1;
+                ReverseMultiplier *= -1;
             } else if (!gamepad1.a) {
                 canSwitch = true;
             }
@@ -118,16 +99,16 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             } else if (gamepad2.b) {
-                leftShoulder.setTargetPosition(242);
-                rightShoulder.setTargetPosition(-249);
+                leftShoulder.setTargetPosition(250);
+                rightShoulder.setTargetPosition(-250);
                 leftShoulder.setPower(0.5);
                 rightShoulder.setPower(-0.5);
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
             } else if (gamepad2.a) {
-                leftShoulder.setTargetPosition(0);
-                rightShoulder.setTargetPosition(0);
+                leftShoulder.setTargetPosition(47);
+                rightShoulder.setTargetPosition(-5);
                 leftShoulder.setPower(0.5);
                 rightShoulder.setPower(-0.5);
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
@@ -143,9 +124,28 @@ public class BasicOpMode_Linear extends LinearOpMode {
             }
 
             if (gamepad2.left_bumper) {
-                clawWrist.setPosition(1);
+                clawWrist.setPosition(0.1);
             } else if (gamepad2.right_bumper) {
-                clawWrist.setPosition(-0.1);
+                clawWrist.setPosition(0.72);
+            }
+
+            if (gamepad2.x){
+                leftShoulder.setTargetPosition(975);
+                rightShoulder.setTargetPosition(-1017);
+                leftShoulder.setPower(1);
+                rightShoulder.setPower(-1);
+                leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+                if (gamepad2.ps){
+                    leftElbow.setTargetPosition(0);
+                    rightShoulder.setTargetPosition(0);
+                    leftShoulder.setPower(1);
+                    rightShoulder.setPower(-1);
+                    leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                    rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+                }
+
             }
 
             if (gamepad2.dpad_down) {
@@ -153,7 +153,7 @@ public class BasicOpMode_Linear extends LinearOpMode {
             } else if (gamepad2.dpad_up) {
                 clawEat.setPower(1);
             }
-
+            Move_USE_ANALOG_STICK(power, gamepad1.left_stick_x, gamepad1.right_stick_x);
             telemetry.addData("Left Shoulder Power: ", leftShoulder.getPower());
             telemetry.addData("Right Shoulder Power: ", rightShoulder.getPower());
             telemetry.addData("Left Elbow Power: ", leftElbow.getPower());
@@ -171,21 +171,10 @@ public class BasicOpMode_Linear extends LinearOpMode {
             telemetry.addData("Back Left POS", leftBack.getCurrentPosition());
             telemetry.addData("Back Right POS", rightBack.getCurrentPosition());
             telemetry.update();
-            RuntimeCounter += 1;
         }
     }
 
-    public void MoveBase(List<Double> PowerList, int ReverseMultiplier) {
-        /*This function uses an analog input from the controller and uses a mathematical function
-         * to smoothen the input and maybe amplify it a little but we can always change it though*/
-        double POWER = ReverseMultiplier * MovingAverage(PowerList);
-        leftFront.setPower(POWER);
-        rightFront.setPower(POWER);
-        leftBack.setPower(POWER);
-        rightBack.setPower(POWER);
-    }
-
-    public void MoveBase_ANALOG(double lateral, double yaw, int ReverseMultiplier) {
+    public void Move_USE_ANALOG_STICK(double axial, double lateral, double yaw) {
         /*
          *       This function uses emulated joystick inputs in
          * the range of [-1.0, 1.0] to move the robot
@@ -193,23 +182,13 @@ public class BasicOpMode_Linear extends LinearOpMode {
          *       lateral is the x coordinate for the left stick on the control pad
          *       yaw is the x coordinate for the right stick on the control pad
          * */
-        double leftFront_pwr = -lateral + yaw;
-        double rightFront_pwr = lateral - yaw;
-        double leftBack_pwr = lateral + yaw;
-        double rightBack_pwr = -lateral - yaw;
-        leftFront.setPower(ReverseMultiplier * leftFront_pwr);
-        rightFront.setPower(ReverseMultiplier * rightFront_pwr);
-        leftBack.setPower(ReverseMultiplier * leftBack_pwr);
-        rightBack.setPower(ReverseMultiplier * rightBack_pwr);
-    }
-
-
-    public double MovingAverage(List<Double> PowerArray) {
-        double sum = 0;
-        int length = PowerArray.size();
-        for (int i = 0 ; i < length ; i++){
-            sum += PowerArray.get(i);
-        }
-        return sum / length;
+        double leftFront_pwr = axial - lateral + yaw;
+        double rightFront_pwr = axial + lateral - yaw;
+        double leftBack_pwr = axial + lateral + yaw;
+        double rightBack_pwr = axial - lateral - yaw;
+        leftFront.setPower(ReverseMultiplier * leftFront_pwr/2);
+        rightFront.setPower(ReverseMultiplier * rightFront_pwr/2);
+        leftBack.setPower(ReverseMultiplier * leftBack_pwr/2);
+        rightBack.setPower(ReverseMultiplier * rightBack_pwr/2);
     }
 }

@@ -31,7 +31,7 @@ public class Autonomous_Red extends LinearOpMode {
     private DcMotor rightFront;
     private DcMotor rightBack;
 
-    private DcMotor rightShoulder;      //all arms
+    private DcMotor rightShoulder;
 
     private DcMotor rightElbow;
 
@@ -56,7 +56,7 @@ public class Autonomous_Red extends LinearOpMode {
 
     private final int DesiredAprilTag_ID = 16;
 
-    private final double DesiredDistance_INCH = 12;
+    private final double DesiredDistance_INCH = 24;
 
     private boolean At_Location = false;
 
@@ -104,23 +104,6 @@ public class Autonomous_Red extends LinearOpMode {
             double lateral = gamepad1.left_stick_x;
             double yaw = gamepad1.right_stick_x;
             */
-            /*
-            if (RunTimeCounter == 0) {
-                //uncomment the following for testing purposes
-                //sleep(1000);
-
-                MoveElbow_POSITION("H"); //TEMP DATA
-
-                //MoveBase_USE_POSITION(UpdateDistanceList(100, 200, 300, 400));
-                //AGAIN, TEMP DATA
-                /*This will move the robot forward*/
-            /*
-                MoveElbow_ANALOG(242, -249);
-
-                UseClaw(0.5, true);
-
-                MoveElbow_ANALOG(0, 0);
-            }*/
             List<Object> AprilTagResults = AprilTagReturn();
 
             double yaw_value = Double.parseDouble(AprilTagResults.get(5).toString());
@@ -128,28 +111,35 @@ public class Autonomous_Red extends LinearOpMode {
 
             int AprilTag_ID_Localized = Integer.parseInt(AprilTagResults.get(0).toString());
 
-            if ((AprilTag_ID_Localized == DesiredAprilTag_ID
-                    /*Note, it is the NUMBER of the apriltag!*/
-                )) {
+            if ((AprilTag_ID_Localized == DesiredAprilTag_ID/*Note, it is the NUMBER
+            of the apriltag!*/)) {
                 /*if true, it means we are align with whatever apriltage is
                  * So we move forward
                  * */
-                if (distance_value > DesiredDistance_INCH) {
-                    MoveBase_USE_ANALOG_STICK(0.5,0, 0, -1);
+                if ((distance_value > DesiredDistance_INCH) && (yaw_value < 5)) {
+                    MoveBase_USE_ANALOG_STICK(0.5, 0, 0, -1);
                 } else {
                     At_Location = true;
                 }
-            }else{
-                MoveBase_USE_ANALOG_STICK(0,0.5,0,-1);
-                sleep(1000);
+            } else {
+                MoveBase_USE_ANALOG_STICK(0, 0.2, 0, -1);
+                sleep(100);
             }
-            if (At_Location){
-                MoveBase_USE_ANALOG_STICK(0.5,0, 0, -1);
+            if (At_Location) {
+                //face samples
+                MoveShoulder_USE_POSITION("R");
+                for (int i = 0 ; i <= 10 ; i++) {
+                    MoveBase_USE_POSITION(100, 200, 400, 500);
+                    UseClaw(0.72, false);
+                    // face baskets/scoring zone
+                    MoveBase_USE_POSITION(100, 200, 400, 500);
+                    UseClaw(0.72, true);
+                }
             }
         }
     }
     // packaged functions to move things
-    public void MoveElbow_ANALOG(int LEFT_Elbow_Position, int RIGHT_Elbow_Position){
+    public void MoveElbow_USE_POSITION(int LEFT_Elbow_Position, int RIGHT_Elbow_Position){
         /*This function uses ENCODERS to move arms to a given POSITION
          * i.e.: Set a given location measured through experiment and
          *       put them into this function
@@ -167,7 +157,7 @@ public class Autonomous_Red extends LinearOpMode {
         rightElbow.setMode(DcMotor.RunMode.RUN_TO_POSITION);
     }
 
-    public void MoveElbow_POSITION(String Position_Code){
+    public void MoveShoulder_USE_POSITION(String Position_Code){
 
 
         /*This will move the arm to a given position
@@ -229,7 +219,7 @@ public class Autonomous_Red extends LinearOpMode {
         rightBack.setPower(ReverseMultiplier * rightBack_pwr);
     }
 
-    public void MoveBase_USE_POSITION(List<Integer> Position){
+    public void MoveBase_USE_POSITION(int ... positions){
         /*It takes a list input:
          * INDEX     |       Value
          * [0]               Left Front Position
@@ -238,21 +228,25 @@ public class Autonomous_Red extends LinearOpMode {
          * [3]               Right Back Position
          * */
 
+        leftFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFront.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBack.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        leftFront.setTargetPosition(positions[0]);
+        rightFront.setTargetPosition(positions[1]);
+        leftBack.setTargetPosition(positions[2]);
+        rightBack.setTargetPosition(positions[3]);
+
         leftFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightFront.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         rightBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         leftBack.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        leftFront.setTargetPosition(Position.get(0));
-        rightFront.setTargetPosition(Position.get(1));
-        leftBack.setTargetPosition(Position.get(2));
-        rightBack.setTargetPosition(Position.get(3));
-
         leftFront.setPower(0.5);
         rightFront.setPower(0.5);
         leftBack.setPower(0.5);
         rightBack.setPower(0.5);
-
     }
 
     public void UseClaw(double turn_position, boolean spit){
