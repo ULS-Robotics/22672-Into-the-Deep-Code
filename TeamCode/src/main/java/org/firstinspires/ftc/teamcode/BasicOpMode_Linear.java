@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.robotcontroller.external.samples;
+package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -28,6 +28,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
     private int ReverseMultiplier = -1;
     private boolean canSwitch = true;
 
+    private boolean MotorSafty = true;
+
     @Override
     public void runOpMode() {
 
@@ -52,6 +54,11 @@ public class BasicOpMode_Linear extends LinearOpMode {
         rightFront.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         leftBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightBack.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        leftShoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightShoulder.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftElbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightElbow.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // set directions Questionable for now....
         leftFront.setDirection(DcMotor.Direction.REVERSE);
@@ -101,8 +108,8 @@ public class BasicOpMode_Linear extends LinearOpMode {
             } else if (gamepad2.b) {
                 leftShoulder.setTargetPosition(250);
                 rightShoulder.setTargetPosition(-250);
-                leftShoulder.setPower(0.5);
-                rightShoulder.setPower(-0.5);
+                leftShoulder.setPower(1);
+                rightShoulder.setPower(-1);
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
@@ -136,23 +143,27 @@ public class BasicOpMode_Linear extends LinearOpMode {
                 rightShoulder.setPower(-1);
                 leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
                 rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-
-                if (gamepad2.ps){
-                    leftElbow.setTargetPosition(0);
-                    rightShoulder.setTargetPosition(0);
-                    leftShoulder.setPower(1);
-                    rightShoulder.setPower(-1);
-                    leftShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                    rightShoulder.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-                }
-
+                MotorSafty = false;
             }
 
+            if ((gamepad2.dpad_left) && (!MotorSafty)){
+                leftElbow.setPower(1);
+                rightElbow.setPower(-1);
+            }
+
+            if ((gamepad2.dpad_right) && (!MotorSafty)){
+                leftElbow.setPower(0);
+                rightElbow.setPower(0);
+            }
+            
             if (gamepad2.dpad_down) {
                 clawEat.setPower(-1);
             } else if (gamepad2.dpad_up) {
                 clawEat.setPower(1);
+            }else{
+                clawEat.setPower(0);
             }
+
             Move_USE_ANALOG_STICK(power, gamepad1.left_stick_x, gamepad1.right_stick_x);
             telemetry.addData("Left Shoulder Power: ", leftShoulder.getPower());
             telemetry.addData("Right Shoulder Power: ", rightShoulder.getPower());
@@ -170,6 +181,9 @@ public class BasicOpMode_Linear extends LinearOpMode {
             telemetry.addData("Front Right POS", rightFront.getCurrentPosition());
             telemetry.addData("Back Left POS", leftBack.getCurrentPosition());
             telemetry.addData("Back Right POS", rightBack.getCurrentPosition());
+            telemetry.addData("", "\n");
+            telemetry.addData("Motor Safety Status", MotorSafty);
+
             telemetry.update();
         }
     }
@@ -186,9 +200,9 @@ public class BasicOpMode_Linear extends LinearOpMode {
         double rightFront_pwr = axial + lateral - yaw;
         double leftBack_pwr = axial + lateral + yaw;
         double rightBack_pwr = axial - lateral - yaw;
-        leftFront.setPower(ReverseMultiplier * leftFront_pwr/2);
-        rightFront.setPower(ReverseMultiplier * rightFront_pwr/2);
-        leftBack.setPower(ReverseMultiplier * leftBack_pwr/2);
-        rightBack.setPower(ReverseMultiplier * rightBack_pwr/2);
+        leftFront.setPower(ReverseMultiplier * leftFront_pwr/1.2);
+        rightFront.setPower(ReverseMultiplier * rightFront_pwr/1.2);
+        leftBack.setPower(ReverseMultiplier * leftBack_pwr/1.2);
+        rightBack.setPower(ReverseMultiplier * rightBack_pwr/1.2);
     }
 }
